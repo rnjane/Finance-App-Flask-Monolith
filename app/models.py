@@ -14,8 +14,6 @@ class User(db.Model, UserMixin):
         db.DateTime, nullable=False, default=datetime.utcnow
     )
     budgets = db.relationship('Budget', backref='user', lazy='dynamic', cascade="all, delete-orphan")
-    
-    # QUESTION: Why do you prefer lazy='dynamic', cascade="all, delete-orphan"?
 
     def __repr__(self):
         return 'Username %r' % (self.username)
