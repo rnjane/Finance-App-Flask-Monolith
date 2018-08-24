@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+
+<head>
+	<meta charset="utf-8" />
+	<title>Budgets App | Budget Details</title>
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+
+	<!-- ================== BEGIN BASE CSS STYLE ================== -->
+	<link href="http://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet">
+	<link href="{{ url_for('static', filename = 'plugins/jquery-ui/themes/base/minified/jquery-ui.min.css') }}" rel="stylesheet"
+	/>
+	<link href="{{ url_for('static', filename = 'plugins/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet" />
+	<link href="{{ url_for('static', filename = 'css/style.min.css') }}" rel="stylesheet" id="theme" />
+	<!-- ================== END BASE CSS STYLE ================== -->
+
+	<!-- ================== Modal JS ================== -->
+	<!-- jQuery library -->
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+	<!-- Latest compiled JavaScript -->
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<!-- ================== END Modal JS ================== -->
+
+</head>
+
+<body>
+	<div id="page-container" class="page-without-sidebar page-header-fixed">
+		<!-- begin #header -->
+		<div id="header" class="header navbar navbar-default navbar-fixed-top">
+			<!-- begin container-fluid -->
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<a href="{{ url_for('budgets') }} " class="navbar-brand"><span class="navbar-logo"></span>Budgets App</a>
+				</div>
+				{% with messages = get_flashed_messages() %} {% if messages %} {% for message in messages %}
+				<div class="alert alert-warning alert-dismissible col-md-3" role="alert">
+					<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+					{{ message }}
+				</div>
+				{% endfor %} {% endif %} {% endwith %}
+				<!-- begin header navigation right -->
+				<ul class="nav navbar-nav navbar-right">
+					<li>
+						<a href="" class="">
+							<span class="hidden-xs">Welcome, {{ current_user.username }}</span>
+						</a>
+					</li>
+					<li>
+						<a href="{{ url_for('logout') }}" class="">
+							<span class="hidden-xs">|</span>
+						</a>
+					</li>
+					<li>
+						<a href="{{ url_for('logout') }}" class="">
+							<span class="hidden-xs">Logout</span>
+						</a>
+					</li>
+				</ul>
+				<!-- end header navigation right -->
+
+			</div>
+			<!-- end container-fluid -->
+		</div>
+		<!-- end #header -->
+
+		<!-- begin #content -->
+		<div id="content" class="container">
+			<!-- begin page-header -->
+			<h1 class="page-header"><small></small></h1>
+			<!-- end page-header -->
+
+			<div class="panel panel-inverse">
+				<div class="panel-heading">
+					<div class="panel-heading-btn">
+						<a href="#newExpenseModal" class="btn btn-sm btn-success" data-toggle="modal">New Expense</a>
+					</div>
+					<h2 class="panel-title">{{ session['currentbudget'] }} Expenses</h2>
+				</div>
+
+				<!-- #Add a new expense modal -->
+				<div class="modal fade" id="newExpenseModal">
+					<div class="modal-dialog">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+								<h4 class="modal-title">New Expense</h4>
+							</div>
+							<div class="modal-body">
+								<form class="form-horizontal" action="{{ url_for('addexpense', budgetname=session['currentbudget'] ) }}" method="POST">
+									<fieldset>
+										<div class="form-group">
+											<div class="col-md-12">
+												{{ form.name(class_ = "form-control", placeholder = "Expense Name", required = "True") }}
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="col-md-12">
+												{{ form.amount(class_ = "form-control", placeholder = "Expense Amount", required = "True") }}
+											</div>
+										</div>
+										<div class="form-group">
+											<div class="col-md-6 col-sm-6">
+												<button type="submit" class="btn btn-primary">Add Expense</button>
+											</div>
+										</div>
+									</fieldset>
+								</form>
+							</div>
+						</div>
+					</div>
+				</div>
+				<!-- End of new expense modal -->
+
+				<!--Edit expense modal-->
+				<div class="modal fade" id="editExpenseModal" tabindex="-1" role="dialog" aria-labelledby="editExpenseModal">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								<h4 class="modal-title" id="exampleModalLabel">Edit</h4>
+							</div>
+							<div class="modal-body">
+								<form action="{{ url_for('editexpense', budgetname=session['currentbudget']) }}" method="POST" class="form-horizontal">
+                                    <div class="form-group">
+                                        {{ form.name(class_ = "form-control", required = "True", readonly = 'readonly', type = "hidden") }}
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-12">
+                                            {{ form.newname(class_ = "form-control", placeholder = "New Name", required = "True") }}
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-12">
+                                            {{ form.newamount(class_ = "form-control", placeholder = "New Amount", required = "True", id = 'newexpenseamount' ) }}
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                                        <button type="submit" class="btn btn-primary">Edit</button>
+                                    </div>
+								</form>
+							</div>
+
+						</div>
+					</div>
+				</div>
+				<!--end of edit expense modal-->
+
+				<!-- Delete expense modal-->
+				<div class="modal fade" id="deleteExpenseModal" tabindex="-1" role="dialog" aria-labelledby="deleteExpenseModal">
+					<div class="modal-dialog" role="document">
+						<div class="modal-content">
+							<div class="modal-header">
+								<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+								<h4 class="modal-title" id="removeModalLabel">Delete</h4>
+							</div>
+							<div class="modal-body">
+								<form action="{{ url_for('deleteexpense', budgetname=session['currentbudget']) }}" method="POST">
+									<div class="form-group">
+										{{ form.name(class_ = "form-control", id="name", required = "True", readonly = 'readonly', type = "hidden") }}
+									</div>
+									<div class="form-group">
+										<h5>Are you sure to delete this expense?</h5>
+									</div>
+									<div class="modal-footer">
+										<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+										<button type="submit" class="btn btn-primary">Delete</button>
+									</div>
+								</form>
+							</div>
+
+						</div>
+					</div>
+				</div>
+				<!--End of delete expense modal-->
+
+				<div class="panel-body">
+					<div class="panel-body">
+						<div class="table-responsive">
+							<table id="data-table" class="table table-striped table-bordered" width="100%">
+								<colgroup>
+									<col span="1" style="width: 30%;">
+									<col span="1" style="width: 14%;">
+									<col span="1" style="width: 14%;">
+									<col span="1" style="width: 14%;">
+									<col span="1" style="width: 14%;">
+									<col span="1" style="width: 14%;">
+								</colgroup>
+								<thead>
+									<tr>
+										<th>Expense Name</th>
+										<th>Expense Amount</th>
+										<th>Remaining amount</th>
+										<th>Date Created</th>
+										<th>Edit</th>
+										<th>Delete</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for expense in expenses %}
+									<tr>
+										<td><a href="{{ "/expense/" + expense.name + "/details" }}">{{ expense.name }}</a></td>
+										<td>{{ expense.amount }} </td>
+										<td>{{ expense.remaining_amount }}</td>
+										<td>{{ expense.date_created }} </td>
+										<td class="text-center"><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editExpenseModal"
+											 data-item="{{ expense.name }}" data-amount="{{ expense.amount }}">Edit Expense</button> </td>
+										<td class="text-center"><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#deleteExpenseModal"
+											 data-item="{{ expense.name }}">Delete Expense</button> </td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				<!-- end panel -->
+				</p>
+			</div>
+		</div>
+	</div>
+
+	<div id="content" class="container">
+		<!-- begin page-header -->
+		<h1 class="page-header"><small></small></h1>
+		<!-- end page-header -->
+
+		<div class="panel panel-inverse">
+			<div class="panel-heading">
+				<div class="panel-heading-btn">
+					<a href="#addIncomeModal" class="btn btn-sm btn-success" data-toggle="modal">New Income</a>
+				</div>
+				<h2 class="panel-title">{{ session['currentbudget'] }} Incomes</h2>
+			</div>
+
+			<!-- #Add a new income modal -->
+			<div class="modal fade" id="addIncomeModal">
+				<div class="modal-dialog">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+							<h4 class="modal-title">New Income</h4>
+						</div>
+						<div class="modal-body">
+							<form class="form-horizontal" action="{{ url_for('addincome', budgetname=session['currentbudget'] ) }}" method="POST">
+								<fieldset>
+									<div class="form-group">
+										<div class="col-md-12">
+											{{ form.name(class_ = "form-control", placeholder = "Income Name", required = "True") }}
+										</div>
+									</div>
+									<div class="form-group">
+										<div class="col-md-12">
+											{{ form.amount(class_ = "form-control", placeholder = "Income Amount", required = "True") }}
+										</div>
+									</div>
+									<div class="form-group">
+										<div class="col-md-6 col-sm-6">
+											<button type="submit" class="btn btn-primary">Add Income</button>
+										</div>
+									</div>
+								</fieldset>
+							</form>
+						</div>
+					</div>
+				</div>
+			</div>
+			<!-- End of new income modal -->
+
+			<!--Edit income modal-->
+			<div class="modal fade" id="editIncomeModal" tabindex="-1" role="dialog" aria-labelledby="editIncomeModal">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title" id="exampleModalLabel">Edit</h4>
+						</div>
+						<div class="modal-body">
+							<form action="{{ url_for('editincome', budgetname=session['currentbudget']) }}" method="POST" class="form-horizontal">
+								<div class="form-group">
+									{{ form.name(class_ = "form-control", id="incomename", required = "True", readonly = 'readonly', type = "hidden") }}
+								</div>
+								<div class="form-group">
+                                    <div class="col-md-12">
+                                        {{ form.newname(class_ = "form-control", placeholder = "New Name", required = "True", id = 'newname' ) }}
+                                    </div>
+                                </div>
+								<div class="form-group">
+                                    <div class="col-md-12">
+                                        {{ form.newamount(class_ = "form-control", placeholder = "New Amount", required = "True", id = 'newamount' ) }}
+                                    </div>
+                                </div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+									<button type="submit" class="btn btn-primary">Edit</button>
+								</div>
+							</form>
+						</div>
+
+					</div>
+				</div>
+			</div>
+			<!--end of edit income modal-->
+
+			<!-- Remove income modal-->
+			<div class="modal fade" id="deleteIncomeModal" tabindex="-1" role="dialog" aria-labelledby="removeModalLabel">
+				<div class="modal-dialog" role="document">
+					<div class="modal-content">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+							<h4 class="modal-title" id="removeModalLabel">Remove</h4>
+						</div>
+						<div class="modal-body">
+							<form action="{{ url_for('deleteincome', budgetname=session['currentbudget']) }}" method="POST">
+								<div class="form-group">
+									{{ form.name(class_ = "form-control", id="name", required = "True", readonly = 'readonly', type = "hidden") }}
+								</div>
+								<div class="form-group">
+									<h5>Are you sure to remove this income?</h5>
+								</div>
+								<div class="modal-footer">
+									<button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+									<button type="submit" class="btn btn-primary">Remove</button>
+								</div>
+							</form>
+						</div>
+
+					</div>
+				</div>
+			</div>
+			<!--End of remove income modal-->
+
+			<div class="panel-body">
+				<div class="panel-body">
+					<div class="table-responsive">
+						<table id="data-table" class="table table-striped table-bordered" width="100%">
+							<colgroup>
+								<col span="1" style="width: 55%;">
+								<col span="1" style="width: 15%;">
+								<col span="1" style="width: 15%;">
+								<col span="1" style="width: 15%;">
+							</colgroup>
+							<thead>
+								<tr>
+									<th>Income Name</th>
+									<th>Income Amount</th>
+									<th>Date Added</th>
+									<th>Edit Income</th>
+									<th>Delete Income</th>
+								</tr>
+							</thead>
+							<tbody>
+								{% for income in incomes %}
+								<tr>
+									<td>{{ income.name }}</td>
+									<td>{{ income.amount }} </td>
+									<td>{{ income.date_created }} </td>
+									<td class="text-center"><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editIncomeModal"
+										 data-item="{{ income.name }}" data-amount="{{ income.amount }}">Edit Income</button> </td>
+									<td class="text-center"><button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#deleteIncomeModal"
+										 data-item="{{ income.name }}">Delete Income</button> </td>
+								</tr>
+								{% endfor %}
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<!-- end panel -->
+			</p>
+		</div>
+	</div>
+	</div>
+	<!-- end #content -->
+
+	</div>
+	<!-- end page container -->
+
+	<!-- ================== BEGIN BASE JS ================== -->
+	<script src="{{ url_for('static', filename = 'plugins/jquery/jquery-1.9.1.min.js') }}"></script>
+	<script src="{{ url_for('static', filename = 'plugins/bootstrap/js/bootstrap.min.js') }}"></script>
+	<!-- ================== END BASE JS ================== -->
+
+	<script>
+		$('#editExpenseModal').on('show.bs.modal', function (event) {
+			var button = $(event.relatedTarget)
+			var item = button.data('item')
+            var amount = button.data('amount')
+			var modal = $(this)
+			modal.find('.modal-title').text('Edit Expense ' + item)
+			modal.find('.modal-body input').val(item)
+            modal.find('.modal-body #newexpenseamount').val(amount)
+		})
+	</script>
+	<script>
+		$('#deleteExpenseModal').on('show.bs.modal', function (event) {
+			var button = $(event.relatedTarget)
+			var task = button.data('item')
+			var modal = $(this)
+			modal.find('.modal-title').text('Remove Expense ' + task)
+			modal.find('.modal-body input').val(task)
+            modal.find('.modal-body input').val(task)
+		})
+	</script>
+    <script>
+		$('#editIncomeModal').on('show.bs.modal', function (event) {
+			var button = $(event.relatedTarget)
+			var item = button.data('item')
+            var amount = button.data('amount')
+			var modal = $(this)
+			modal.find('.modal-title').text('Edit Income ' + item)
+			modal.find('.modal-body input').val(item)
+            modal.find('.modal-body #newamount').val(amount)
+		})
+	</script>
+	<script>
+		$('#deleteIncomeModal').on('show.bs.modal', function (event) {
+			var button = $(event.relatedTarget)
+			var task = button.data('item')
+			var modal = $(this)
+			modal.find('.modal-title').text('Remove Income ' + task)
+			modal.find('.modal-body input').val(task)
+		})
+	</script>
+
+</body>
+
+</html>
